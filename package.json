@@ -1,0 +1,31 @@
+{
+  "name": "pathnod-website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.27.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "node server.js",
+    "build": "tsc --noEmit && vite build && tsx scripts/prerender.tsx",
+    "preview": "node server.js",
+    "start": "node server.js",
+    "test": "pnpm run build && node --test"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.5.2",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.1.1",
+    "typescript": "7.0.2",
+    "tsx": "4.20.6",
+    "vite": "8.3.0"
+  }
+}

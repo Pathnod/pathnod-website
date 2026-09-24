@@ -4,6 +4,8 @@ import { BetaPage } from '../pages/BetaPage';
 import { HomePage } from '../pages/HomePage';
 import { OperatorsPage } from '../pages/OperatorsPage';
 import { ThanksPage } from '../pages/ThanksPage';
+import { PrivacyPage } from '../pages/PrivacyPage';
+import { LegalPage } from '../pages/LegalPage';
 import type { Page } from './routes';
 
 export function App({ page }: { page: Page }) {
@@ -12,6 +14,8 @@ export function App({ page }: { page: Page }) {
     beta: <BetaPage />,
     operators: <OperatorsPage />,
     thanks: <ThanksPage />,
+    privacy: <PrivacyPage />,
+    legal: <LegalPage />,
   }[page];
 
   return (

@@ -1,9 +1,12 @@
 import { maxBodyBytes, maxSubmissionsPerWindow, validateSubmission, windowMs } from '../../lib/submission.js';
+import { verifyTurnstile } from '../../lib/turnstile.js';
 
 function respond(request, status, message, audience) {
   const headers = {
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
   };
   if (request.headers.get('accept')?.includes('application/json')) {
     return Response.json({ ok: status < 400, message }, { status, headers });
@@ -69,9 +72,9 @@ async function rateLimitKey(address, secret, windowStart) {
   return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-export async function onRequest({ request, env }) {
+export async function onRequest({ request, env, fetcher = fetch }) {
   if (request.method !== 'POST') {
-    return new Response('Method not allowed.', { status: 405, headers: { Allow: 'POST' } });
+    return new Response('Method not allowed.', { status: 405, headers: { Allow: 'POST', 'X-Content-Type-Options': 'nosniff' } });
   }
 
   try {
@@ -82,7 +85,8 @@ export async function onRequest({ request, env }) {
     if (submission.error) return respond(request, 400, submission.error);
 
     // Fail closed if the persistent store or private rate-limit key is not configured.
-    if (!env.DB || typeof env.RATE_LIMIT_SECRET !== 'string' || env.RATE_LIMIT_SECRET.length < 32) {
+    if (!env.DB || typeof env.RATE_LIMIT_SECRET !== 'string' || env.RATE_LIMIT_SECRET.length < 32 ||
+        !env.TURNSTILE_SECRET_KEY) {
       return respond(request, 503, 'The form is temporarily unavailable.');
     }
     const address = request.headers.get('CF-Connecting-IP');
@@ -102,11 +106,30 @@ export async function onRequest({ request, env }) {
       return respond(request, 429, 'Too many submissions. Please try again later.');
     }
 
+    const verified = await verifyTurnstile({
+      token: parsed.value['cf-turnstile-response'],
+      secret: env.TURNSTILE_SECRET_KEY,
+      hostname: new URL(request.url).hostname,
+      action: `interest_${submission.value.audience}`,
+      fetcher,
+    });
+    if (!verified) return respond(request, 400, 'Security check failed. Please try again.');
+
     const lead = submission.value;
     await env.DB.prepare(`
       INSERT INTO leads (audience, email, submitted_at, payload)
       VALUES (?1, ?2, ?3, ?4)
     `).bind(lead.audience, lead.email, lead.submittedAt, JSON.stringify(lead)).run();
+
+    // Also prune on active traffic; monthly maintenance covers idle databases.
+    try {
+      const retentionCutoff = new Date(now);
+      retentionCutoff.setUTCFullYear(retentionCutoff.getUTCFullYear() - 1);
+      await env.DB.prepare('DELETE FROM leads WHERE submitted_at < ?1')
+        .bind(retentionCutoff.toISOString()).run();
+    } catch (error) {
+      console.error('Lead retention cleanup failed:', error);
+    }
 
     // Keep only recent pseudonymous rate-limit keys; never store a raw IP address.
     if (Math.random() < 0.01) {

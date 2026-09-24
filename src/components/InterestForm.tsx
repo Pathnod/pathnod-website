@@ -1,4 +1,5 @@
-import { useState, type SubmitEvent } from 'react';
+import { useCallback, useState, type SubmitEvent } from 'react';
+import { TurnstileCheck } from './TurnstileCheck';
 
 type Audience = 'beta' | 'operator';
 
@@ -10,13 +11,17 @@ interface ApiResponse {
 export function InterestForm({ audience }: { audience: Audience }) {
   const [status, setStatus] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [verificationAttempt, setVerificationAttempt] = useState(0);
+  const receiveToken = useCallback((token: string) => setTurnstileToken(token), []);
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    if (!form.reportValidity() || submitting) return;
+    if (!form.reportValidity() || submitting || !turnstileToken) return;
 
     const fields = Object.fromEntries(new FormData(form));
+    fields['cf-turnstile-response'] = turnstileToken;
     setSubmitting(true);
     setStatus('Sending your details…');
 
@@ -32,6 +37,8 @@ export function InterestForm({ audience }: { audience: Audience }) {
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Please try again later.');
       setSubmitting(false);
+      setTurnstileToken('');
+      setVerificationAttempt((attempt) => attempt + 1);
     }
   }
 
@@ -44,9 +51,11 @@ export function InterestForm({ audience }: { audience: Audience }) {
         <input type="checkbox" name="consent" value="yes" required />
         <span>{audience === 'beta'
           ? 'I agree that Pathnod may store these details and contact me about beta testing. I can decline an invitation at any time. *'
-          : 'I agree that Pathnod may store these details and contact me about this research conversation. Participation is voluntary. *'}</span>
+          : 'I agree that Pathnod may store these details and contact me about this research conversation. Participation is voluntary. *'} Read our <a href="/privacy/">privacy notice</a>.</span>
       </label>
-      <button className="form-submit" type="submit" disabled={submitting}>
+      <TurnstileCheck key={verificationAttempt} action={`interest_${audience}`} onToken={receiveToken} />
+      <input type="hidden" name="cf-turnstile-response" value={turnstileToken} />
+      <button className="form-submit" type="submit" disabled={submitting || !turnstileToken}>
         <span>{audience === 'beta' ? 'Join the beta waitlist' : 'Request a conversation'}</span><span aria-hidden="true">↗</span>
       </button>
       <p className="form-status" role="status" aria-live="polite">{status}</p>

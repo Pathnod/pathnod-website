@@ -3,6 +3,7 @@ import { appendFile, mkdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { maxBodyBytes, maxSubmissionsPerWindow, validateSubmission, windowMs } from './lib/submission.js';
+import { verifyTurnstile } from './lib/turnstile.js';
 
 export { validateSubmission } from './lib/submission.js';
 
@@ -56,7 +57,8 @@ async function readBody(request) {
   throw new Error('Unsupported content type.');
 }
 
-export function createPathnodServer({ publicDir = defaultPublicDir, dataDir = defaultDataDir, trustProxy = false } = {}) {
+export function createPathnodServer({ publicDir = defaultPublicDir, dataDir = defaultDataDir, trustProxy = false,
+  turnstileSecret = process.env.TURNSTILE_SECRET_KEY, fetcher = fetch } = {}) {
   const recentByAddress = new Map();
   const resolvedPublicDir = path.resolve(publicDir);
 
@@ -64,7 +66,8 @@ export function createPathnodServer({ publicDir = defaultPublicDir, dataDir = de
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.setHeader('X-Frame-Options', 'DENY');
-    response.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'");
+    response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    response.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com; form-action 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'");
 
     const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
     if (pathname === '/api/interest') {
@@ -80,10 +83,19 @@ export function createPathnodServer({ publicDir = defaultPublicDir, dataDir = de
         const now = Date.now();
         const recent = (recentByAddress.get(address) ?? []).filter((time) => now - time < windowMs);
         if (recent.length >= maxSubmissionsPerWindow) return result(response, request, 429, 'Too many submissions. Please try again later.');
-        await mkdir(dataDir, { recursive: true, mode: 0o700 });
-        await appendFile(path.join(dataDir, 'leads.jsonl'), JSON.stringify(submission.value) + '\n', { mode: 0o600 });
         recent.push(now);
         recentByAddress.set(address, recent);
+        if (!turnstileSecret) return result(response, request, 503, 'The form is temporarily unavailable.');
+        const verified = await verifyTurnstile({
+          token: raw['cf-turnstile-response'],
+          secret: turnstileSecret,
+          hostname: new URL(request.url ?? '/', `http://${request.headers.host}`).hostname,
+          action: `interest_${submission.value.audience}`,
+          fetcher,
+        });
+        if (!verified) return result(response, request, 400, 'Security check failed. Please try again.');
+        await mkdir(dataDir, { recursive: true, mode: 0o700 });
+        await appendFile(path.join(dataDir, 'leads.jsonl'), JSON.stringify(submission.value) + '\n', { mode: 0o600 });
         if (recentByAddress.size > 1_000) {
           for (const [key, times] of recentByAddress) {
             if (times.every((time) => now - time >= windowMs)) recentByAddress.delete(key);

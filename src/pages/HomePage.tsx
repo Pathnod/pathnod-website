@@ -12,7 +12,7 @@ export function HomePage() {
           </div>
           <p className="hero-note">Early research and prototyping · No public network yet</p>
         </div>
-        <div className="hero-visual" role="img" aria-label="Illustration of a physical device witnessed by nearby phones">
+        <div className="hero-visual" role="img" aria-label="A registered physical device answers a local Bluetooth challenge with a signed reply; nearby phones provide independent observations.">
           <div className="visual-topline"><span>FIELD NOTE / 001</span><span>LOCAL SIGNAL</span></div>
           <div className="visual-grid">
             <div className="orbit orbit-one" /><div className="orbit orbit-two" />
@@ -20,7 +20,11 @@ export function HomePage() {
             <span className="witness witness-one"><span /> 01 / witness</span>
             <span className="witness witness-two"><span /> 02 / witness</span>
             <span className="witness witness-three"><span /> 03 / witness</span>
-            <div className="visual-caption">Presence is a signal.<br /><strong>Confidence takes independent observations.</strong></div>
+          </div>
+          <div className="visual-flow" aria-hidden="true">
+            <span><strong>01 / DEVICE</strong>Registered equipment</span>
+            <span><strong>02 / LOCAL EXCHANGE</strong>BLE challenge + signed reply</span>
+            <span><strong>03 / WITNESSES</strong>Independent observations</span>
           </div>
           <div className="visual-bottomline"><span>PATHNOD / EARLY CONCEPT</span><span>↗ 2026</span></div>
         </div>

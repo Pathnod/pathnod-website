@@ -13,3 +13,12 @@
 .fieldset-options{border:0;padding:0;margin-inline:0}.fieldset-options legend{font-size:12px;font-weight:750;color:#334e42;margin-bottom:11px}
 .brand-mark{display:inline-block;flex:none;width:42px;height:42px;background-image:url('/assets/pathnod-logo-transparent.png');background-repeat:no-repeat;background-position:center;background-size:157%}
 @media(max-width:760px){.brand-mark{width:38px;height:38px}}
+:root{--copper-text:#8e5e43}
+.statement-number,.mini-list span,.site-nav a:hover,.site-nav a:focus-visible,.inline-link:hover{color:var(--copper-text)}
+.visual-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #bdcabb;background:#e7ece3;color:var(--forest)}
+.visual-flow>span{position:relative;display:flex;flex-direction:column;gap:5px;min-height:74px;padding:15px 18px;font-family:var(--sans);font-size:12px;font-weight:650;line-height:1.35}
+.visual-flow>span+span{border-left:1px solid #bdcabb}
+.visual-flow>span:not(:last-child)::after{content:'→';position:absolute;right:10px;top:13px;color:var(--copper-text);font-size:15px}
+.visual-flow strong{padding-right:15px;color:var(--copper-text);font-size:9px;font-weight:750;letter-spacing:.12em}
+@media(max-width:760px){.visual-flow>span{min-height:78px;padding:13px 11px;font-size:10px}.visual-flow strong{font-size:8px}.visual-flow>span:not(:last-child)::after{right:3px;top:10px;font-size:12px}}
+@media(max-width:430px){.visual-flow{grid-template-columns:1fr}.visual-flow>span{display:grid;grid-template-columns:104px 1fr;align-items:center;gap:8px;min-height:49px;padding:9px 14px;font-size:11px}.visual-flow>span+span{border-left:0;border-top:1px solid #bdcabb}.visual-flow strong{padding:0;font-size:8px;letter-spacing:.08em}.visual-flow>span:not(:last-child)::after{display:none}}

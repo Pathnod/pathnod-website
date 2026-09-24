@@ -22,6 +22,8 @@ class TestDatabase {
         run: async () => {
           if (sql.includes('INSERT INTO leads')) {
             this.leads.push(JSON.parse(values[3]));
+          } else if (sql.includes('DELETE FROM leads')) {
+            this.leads = this.leads.filter((lead) => lead.submittedAt >= values[0]);
           } else if (sql.includes('DELETE FROM submission_rate_limits')) {
             for (const [key, value] of this.limits) {
               if (value.windowStart < values[0]) this.limits.delete(key);

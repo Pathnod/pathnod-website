@@ -25,6 +25,14 @@ const pages: { page: Page; route: string; title: string; description: string }[]
     page: 'thanks', route: 'thanks', title: 'Thank you — Pathnod',
     description: 'Thank you for your interest in Pathnod.',
   },
+  {
+    page: 'privacy', route: 'privacy', title: 'Privacy notice — Pathnod',
+    description: 'How Pathnod uses information submitted through its beta and operator research forms.',
+  },
+  {
+    page: 'legal', route: 'legal', title: 'Legal notice — Pathnod',
+    description: 'Publisher, hosting and contact information for the Pathnod website.',
+  },
 ];
 
 for (const { page, route, title, description } of pages) {

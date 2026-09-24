@@ -108,6 +108,16 @@ export async function onRequest({ request, env }) {
       VALUES (?1, ?2, ?3, ?4)
     `).bind(lead.audience, lead.email, lead.submittedAt, JSON.stringify(lead)).run();
 
+    // Also prune on active traffic; monthly maintenance covers idle databases.
+    try {
+      const retentionCutoff = new Date(now);
+      retentionCutoff.setUTCFullYear(retentionCutoff.getUTCFullYear() - 1);
+      await env.DB.prepare('DELETE FROM leads WHERE submitted_at < ?1')
+        .bind(retentionCutoff.toISOString()).run();
+    } catch (error) {
+      console.error('Lead retention cleanup failed:', error);
+    }
+
     // Keep only recent pseudonymous rate-limit keys; never store a raw IP address.
     if (Math.random() < 0.01) {
       try {

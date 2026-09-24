@@ -17,7 +17,7 @@ production build and API/page tests.
 
 ## Architecture
 
-The UI is a small React + TypeScript application. `src/pages/` contains the four
+The UI is a small React + TypeScript application. `src/pages/` contains the six
 routes; `src/components/` holds shared navigation, footer, form, and subpage
 layout. `src/app/` chooses the page based on the URL. The original colors, CSS,
 copy, and logo remain in `public/assets/`.
@@ -37,10 +37,15 @@ validation, and limit repeated submissions per visitor. The Cloudflare Function
 stores leads in D1, not in a deployment's ephemeral filesystem. Rate-limit keys
 are HMAC hashes of the visitor IP and time window; raw IPs are not stored.
 
-This is an early-stage collection service, not a CRM. Before opening registrations
-publicly, establish a privacy contact, a retention/deletion process, and restricted
-access plus backups for the D1 database. The beta and operator forms contain
-personal data; do not point preview deployments at the production D1 database.
+This is an early-stage collection service, not a CRM. The privacy contact is
+`pathnod@protonmail.com`. Restrict access to the D1 database and keep backups.
+The beta and operator forms contain personal data; do not point preview
+deployments at the production D1 database. At least monthly, execute
+`cloudflare/retention.sql` in each D1 database to remove expired leads and
+rate-limit keys. Fulfil deletion requests promptly by locating the relevant
+email in D1 and deleting its rows. The legal publisher identity and postal
+address are not yet known and **must be completed in the legal and privacy
+pages before public launch**.
 
 ## Deploy on Cloudflare Pages
 
@@ -81,7 +86,7 @@ reverse proxy that sanitizes `X-Forwarded-For`.
 ```text
 src/app/         app shell and route selection
 src/components/  shared UI and form behavior
-src/pages/       home, beta, operator, and thank-you pages
+src/pages/       home, beta, operator, thank-you, privacy, and legal pages
 public/assets/   original CSS and logo
 scripts/         static HTML pre-render step
 functions/       Cloudflare Pages form endpoint

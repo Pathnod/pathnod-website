@@ -7,8 +7,10 @@ import { ThanksPage } from '../pages/ThanksPage';
 import { PrivacyPage } from '../pages/PrivacyPage';
 import { LegalPage } from '../pages/LegalPage';
 import type { Page } from './routes';
+import { useScrollReveal } from './useScrollReveal';
 
 export function App({ page }: { page: Page }) {
+  useScrollReveal(page);
   const content = {
     home: <HomePage />,
     beta: <BetaPage />,

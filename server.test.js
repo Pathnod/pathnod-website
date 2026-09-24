@@ -11,7 +11,11 @@ let dataDir;
 
 before(async () => {
   dataDir = await mkdtemp(path.join(os.tmpdir(), 'pathnod-website-test-'));
-  server = createPathnodServer({ dataDir });
+  server = createPathnodServer({ dataDir, turnstileSecret: 'test-secret', fetcher: async (_url, options) => {
+    const form = new URLSearchParams(options.body);
+    const audience = form.get('response')?.split(':')[1];
+    return Response.json({ success: true, hostname: '127.0.0.1', action: `interest_${audience}` });
+  } });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   baseUrl = `http://127.0.0.1:${server.address().port}`;
 });
@@ -25,7 +29,7 @@ async function submit(fields) {
   return fetch(`${baseUrl}/api/interest`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(fields),
+    body: JSON.stringify({ 'cf-turnstile-response': `valid:${fields.audience}`, ...fields }),
   });
 }
 
@@ -44,6 +48,8 @@ test('serves pre-rendered pages with their route-specific content', async () => 
     ['/beta/', 'Join the beta waitlist — Pathnod', 'name="audience" value="beta"'],
     ['/operators/', 'For network operators — Pathnod', 'name="audience" value="operator"'],
     ['/thanks/', 'Thank you — Pathnod', 'Message received'],
+    ['/privacy/', 'Privacy notice — Pathnod', 'pathnod@protonmail.com'],
+    ['/legal/', 'Legal notice — Pathnod', 'Cloudflare'],
   ];
   for (const [route, title, content] of pages) {
     const response = await fetch(`${baseUrl}${route}`);
@@ -54,6 +60,21 @@ test('serves pre-rendered pages with their route-specific content', async () => 
     assert.ok(html.includes(content));
     assert.match(html, /<div id="root">.+<\/div>/s);
   }
+});
+
+test('static pages declare security headers for Cloudflare Pages', async () => {
+  const headers = await readFile(path.join(process.cwd(), 'dist/_headers'), 'utf8');
+  assert.match(headers, /Content-Security-Policy:.*frame-ancestors 'none'/);
+  assert.match(headers, /X-Frame-Options: DENY/);
+  assert.match(headers, /Permissions-Policy:/);
+  const response = await fetch(`${baseUrl}/privacy/`);
+  assert.equal(response.headers.get('x-frame-options'), 'DENY');
+  assert.match(response.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+});
+
+test('local API rejects a missing Turnstile token', async () => {
+  const response = await submit({ audience: 'beta', email: 'person@example.com', iphone: 'yes', consent: 'yes', 'cf-turnstile-response': '' });
+  assert.equal(response.status, 400);
 });
 
 test('stores beta and operator submissions separately without logging IPs', async () => {

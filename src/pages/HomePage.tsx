@@ -51,7 +51,7 @@ export function HomePage() {
           <div className="steps">
             <article className="step" data-scroll-reveal><span className="step-index">01 / DISCOVER</span><div className="step-symbol" aria-hidden="true">◎</div><h3>A phone passes nearby</h3><p>A participating phone detects a registered device's Bluetooth service when it comes within radio range.</p></article>
             <article className="step" data-scroll-reveal><span className="step-index">02 / CHALLENGE</span><div className="step-symbol" aria-hidden="true">⌁</div><h3>The device responds</h3><p>A fresh challenge asks the device to sign a response with its own key, linking the observation to that device.</p></article>
-            <article className="step" data-scroll-reveal><span className="step-index">03 / CORROBORATE</span><div className="step-symbol" aria-hidden="true">✳</div><h3>Signals add up</h3><p>Multiple observations can give operators a stronger, auditable signal than self-reporting alone.</p></article>
+            <article className="step" data-scroll-reveal><span className="step-index">03 / CORROBORATE</span><div className="step-symbol" aria-hidden="true">{'\u2733\uFE0E'}</div><h3>Signals add up</h3><p>Multiple observations can give operators a stronger, auditable signal than self-reporting alone.</p></article>
           </div>
           <div className="caveat"><span>WHAT THIS DOES NOT CLAIM</span><p>A nearby observation is not proof of exact GPS location, a unique human, or the absence of collusion. Those limits shape the product.</p></div>
         </div>

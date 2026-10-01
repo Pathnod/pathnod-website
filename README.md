@@ -36,6 +36,14 @@ collect only contact and qualification details, use a honeypot, length
 validation, a Turnstile challenge, and limit repeated submissions per visitor.
 Turnstile verification happens server-side, and the response must match the
 request hostname and the form action. The Cloudflare Function
+validates Turnstile before accessing D1, so missing, invalid, expired, or replayed
+tokens do not consume database queries or writes. Only verified submissions count
+toward the limit of five per IP per ten-minute fixed window. The atomic SQL counter
+stops updating at that limit; further verified submissions return HTTP 429 without
+writing a lead or incrementing the counter (the SQL statement still reads D1).
+This protects D1 from unverified form spam, not from all denial-of-service traffic;
+edge rate limiting is an additional deployment-level protection.
+The Function
 stores leads in D1, not in a deployment's ephemeral filesystem. Rate-limit keys
 are HMAC hashes of the visitor IP and time window; raw IPs are not stored.
 

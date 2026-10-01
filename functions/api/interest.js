@@ -92,20 +92,7 @@ export async function onRequest({ request, env, fetcher = fetch }) {
     const address = request.headers.get('CF-Connecting-IP');
     if (!address) return respond(request, 503, 'The form is temporarily unavailable.');
 
-    const now = Date.now();
-    const windowStart = Math.floor(now / windowMs) * windowMs;
-    const key = await rateLimitKey(address, env.RATE_LIMIT_SECRET, windowStart);
-    const attempts = await env.DB.prepare(`
-      INSERT INTO submission_rate_limits (key, window_start, attempts)
-      VALUES (?1, ?2, 1)
-      ON CONFLICT(key) DO UPDATE SET attempts = attempts + 1
-      RETURNING attempts
-    `).bind(key, windowStart).first('attempts');
-    if (!Number.isInteger(attempts)) throw new Error('Rate limit could not be recorded.');
-    if (attempts > maxSubmissionsPerWindow) {
-      return respond(request, 429, 'Too many submissions. Please try again later.');
-    }
-
+    // Reject missing, invalid, expired, or replayed tokens before any D1 access.
     const verified = await verifyTurnstile({
       token: parsed.value['cf-turnstile-response'],
       secret: env.TURNSTILE_SECRET_KEY,
@@ -114,6 +101,22 @@ export async function onRequest({ request, env, fetcher = fetch }) {
       fetcher,
     });
     if (!verified) return respond(request, 400, 'Security check failed. Please try again.');
+
+    const now = Date.now();
+    const windowStart = Math.floor(now / windowMs) * windowMs;
+    const key = await rateLimitKey(address, env.RATE_LIMIT_SECRET, windowStart);
+    const attempts = await env.DB.prepare(`
+      INSERT INTO submission_rate_limits (key, window_start, attempts)
+      VALUES (?1, ?2, 1)
+      ON CONFLICT(key) DO UPDATE SET attempts = attempts + 1
+      WHERE submission_rate_limits.attempts < ?3
+      RETURNING attempts
+    `).bind(key, windowStart, maxSubmissionsPerWindow).first('attempts');
+    // A capped counter returns no row and does not perform another update.
+    if (attempts === null) {
+      return respond(request, 429, 'Too many submissions. Please try again later.');
+    }
+    if (!Number.isInteger(attempts)) throw new Error('Rate limit could not be recorded.');
 
     const lead = submission.value;
     await env.DB.prepare(`

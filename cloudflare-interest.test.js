@@ -6,17 +6,23 @@ class TestDatabase {
   constructor() {
     this.leads = [];
     this.limits = new Map();
+    this.preparedStatements = 0;
+    this.counterWrites = 0;
   }
 
   prepare(sql) {
+    this.preparedStatements++;
     return {
       bind: (...values) => ({
         first: async () => {
           assert.match(sql, /INSERT INTO submission_rate_limits/);
-          const [key, windowStart] = values;
+          assert.match(sql, /WHERE submission_rate_limits\.attempts < \?3/);
+          const [key, windowStart, limit] = values;
           assert.doesNotMatch(key, /127\.0\.0\.1/);
+          if ((this.limits.get(key)?.attempts ?? 0) >= limit) return null;
           const attempts = (this.limits.get(key)?.attempts ?? 0) + 1;
           this.limits.set(key, { windowStart, attempts });
+          this.counterWrites++;
           return attempts;
         },
         run: async () => {
@@ -108,7 +114,12 @@ test('Cloudflare function rate limits repeated submissions per visitor', async (
     assert.equal((await onRequest({ request: request(beta), ...settings(DB) })).status, 200);
   }
   assert.equal((await onRequest({ request: request(beta), ...settings(DB) })).status, 429);
+  for (let count = 0; count < 20; count++) {
+    assert.equal((await onRequest({ request: request(beta), ...settings(DB) })).status, 429);
+  }
   assert.equal(DB.leads.length, 5);
+  assert.equal(DB.counterWrites, 5);
+  assert.equal([...DB.limits.values()][0].attempts, 5);
 });
 
 test('Cloudflare function rejects missing, invalid, or wrong-domain Turnstile proofs', async () => {
@@ -119,6 +130,60 @@ test('Cloudflare function rejects missing, invalid, or wrong-domain Turnstile pr
   const wrongAction = await onRequest({ request: request(beta), ...settings(DB, validOperatorSiteverify) });
   assert.deepEqual([missing.status, invalid.status, wrongDomain.status, wrongAction.status], [400, 400, 400, 400]);
   assert.equal(DB.leads.length, 0);
+  assert.equal(DB.preparedStatements, 0);
+});
+
+test('unverified spam never accesses D1', async () => {
+  const DB = new TestDatabase();
+  const tokens = [undefined, '', 'forged-token', 'x'.repeat(2049), 123, {}];
+  for (let count = 0; count < 24; count++) {
+    const response = await onRequest({
+      request: request({ ...beta, 'cf-turnstile-response': tokens[count % tokens.length] }),
+      ...settings(DB),
+    });
+    assert.equal(response.status, 400);
+  }
+  assert.equal(DB.preparedStatements, 0);
+  assert.equal(DB.counterWrites, 0);
+});
+
+test('Turnstile outages and expired tokens fail closed before accessing D1', async () => {
+  const DB = new TestDatabase();
+  const fetchers = [
+    async () => { throw new Error('offline'); },
+    async () => Response.json({ success: false, 'error-codes': ['timeout-or-duplicate'] }),
+    async () => Response.json({}, { status: 503 }),
+  ];
+  for (const fetcher of fetchers) {
+    const response = await onRequest({ request: request(beta), ...settings(DB, fetcher) });
+    assert.equal(response.status, 400);
+  }
+  assert.equal(DB.preparedStatements, 0);
+});
+
+test('replayed Turnstile tokens do not access D1 again', async () => {
+  const DB = new TestDatabase();
+  let used = false;
+  const fetcher = async () => {
+    const success = !used;
+    used = true;
+    return Response.json({ success, hostname: 'pathnod.com', action: 'interest_beta' });
+  };
+  assert.equal((await onRequest({ request: request(beta), ...settings(DB, fetcher) })).status, 200);
+  const statementsAfterSuccess = DB.preparedStatements;
+  assert.equal((await onRequest({ request: request(beta), ...settings(DB, fetcher) })).status, 400);
+  assert.equal(DB.preparedStatements, statementsAfterSuccess);
+  assert.equal(DB.leads.length, 1);
+});
+
+test('concurrent verified submissions stay capped at five counter writes', async () => {
+  const DB = new TestDatabase();
+  const responses = await Promise.all(Array.from({ length: 20 }, () =>
+    onRequest({ request: request(beta), ...settings(DB) })));
+  assert.equal(responses.filter((response) => response.status === 200).length, 5);
+  assert.equal(responses.filter((response) => response.status === 429).length, 15);
+  assert.equal(DB.leads.length, 5);
+  assert.equal(DB.counterWrites, 5);
 });
 
 test('Cloudflare function rejects other methods', async () => {

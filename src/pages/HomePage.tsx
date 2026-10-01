@@ -57,6 +57,21 @@ export function HomePage() {
         </div>
       </section>
 
+      <section className="section shell explainer-section" aria-labelledby="explainer-heading">
+        <div className="section-label">The concept</div>
+        <div className="section-body" data-scroll-reveal>
+          <h2 id="explainer-heading">See the idea<br /><em>in action.</em></h2>
+          <figure className="explainer-video">
+            <video controls playsInline preload="none" width={1920} height={1080}
+              poster="/assets/pathnod-motion-poster.jpg" aria-label="Pathnod concept animation"
+              aria-describedby="explainer-caption">
+              <source src="/assets/pathnod-motion.mp4" type="video/mp4" />
+              Your browser does not support embedded video. <a href="/assets/pathnod-motion.mp4">Download the Pathnod animation</a>.
+            </video>        
+          </figure>          
+        </div>
+      </section>
+
       <section className="section shell status-section">
         <div className="section-label">Where we are</div>
         <div className="section-body status-body" data-scroll-reveal><h2>Building the first<br /><em>real-world test.</em></h2><p>Pathnod is in an early validation stage. We are prototyping the device–phone exchange and speaking with physical network operators. The broader privacy and on-chain architecture is a direction under development, not a deployed guarantee.</p><a className="inline-link" href="https://github.com/Pathnod" target="_blank" rel="noopener noreferrer">Follow the work on GitHub <span aria-hidden="true">↗</span></a></div>

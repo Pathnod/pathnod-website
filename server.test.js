@@ -72,6 +72,24 @@ test('static pages declare security headers for Cloudflare Pages', async () => {
   assert.match(response.headers.get('content-security-policy'), /frame-ancestors 'none'/);
 });
 
+test('home page embeds the self-hosted concept video without autoplay', async () => {
+  const html = await (await fetch(`${baseUrl}/`)).text();
+  const video = html.match(/<video\b[^>]*>[\s\S]*?<\/video>/)?.[0];
+  assert.ok(video);
+  assert.match(video, /controls/);
+  assert.match(video, /playsInline/i);
+  assert.match(video, /preload="none"/);
+  assert.doesNotMatch(video, /autoplay/i);
+  assert.match(video, /src="\/assets\/pathnod-motion\.mp4"/);
+  assert.match(html, /not a live product demo/);
+  const media = await fetch(`${baseUrl}/assets/pathnod-motion.mp4`, { method: 'HEAD' });
+  assert.equal(media.status, 200);
+  assert.equal(media.headers.get('content-type'), 'video/mp4');
+  const poster = await fetch(`${baseUrl}/assets/pathnod-motion-poster.jpg`, { method: 'HEAD' });
+  assert.equal(poster.status, 200);
+  assert.equal(poster.headers.get('content-type'), 'image/jpeg');
+});
+
 test('local API rejects a missing Turnstile token', async () => {
   const response = await submit({ audience: 'beta', email: 'person@example.com', iphone: 'yes', consent: 'yes', 'cf-turnstile-response': '' });
   assert.equal(response.status, 400);

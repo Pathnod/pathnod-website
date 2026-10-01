@@ -17,6 +17,8 @@ const mimeTypes = {
   '.ico': 'image/x-icon',
   '.js': 'text/javascript; charset=utf-8',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.mp4': 'video/mp4',
   '.svg': 'image/svg+xml',
 };
 

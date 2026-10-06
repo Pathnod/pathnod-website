@@ -71,7 +71,7 @@ function BetaFields() {
         <label className="radio-card"><input type="radio" name="iphone" value="yes" required /> Yes</label>
         <label className="radio-card"><input type="radio" name="iphone" value="no" /> No</label>
         <label className="radio-card"><input type="radio" name="iphone" value="unsure" /> Not sure</label>
-      </div></fieldset>
+      </div><small>First tests focus on our iOS prototype. You can join without an iPhone; Android support has no announced date.</small></fieldset>
       <div className="field"><label htmlFor="beta-country">Country <small>(optional)</small></label><input id="beta-country" name="country" type="text" autoComplete="country-name" maxLength={80} placeholder="Where would you test from?" /></div>
     </>
   );

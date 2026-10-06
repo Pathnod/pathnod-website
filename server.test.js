@@ -62,6 +62,21 @@ test('serves pre-rendered pages with their route-specific content', async () => 
   }
 });
 
+test('new branding assets and favicon are available on every page', async () => {
+  for (const route of ['/', '/beta/', '/operators/', '/privacy/', '/legal/']) {
+    const html = await (await fetch(`${baseUrl}${route}`)).text();
+    assert.match(html, /rel="icon" href="\/assets\/pathnod-favicon-v2\.png"/);
+    assert.match(html, /rel="apple-touch-icon" href="\/assets\/pathnod-favicon-v2\.png"/);
+    assert.doesNotMatch(html, /class="footer-banner"|class="footer-identity"/);
+    assert.match(html, /Trust what is on the ground\./);
+  }
+  for (const asset of ['pathnod-favicon-v2.png', 'pathnod-mark-v2.png']) {
+    const response = await fetch(`${baseUrl}/assets/${asset}`, { method: 'HEAD' });
+    assert.equal(response.status, 200, asset);
+    assert.equal(response.headers.get('content-type'), 'image/png');
+  }
+});
+
 test('static pages declare security headers for Cloudflare Pages', async () => {
   const headers = await readFile(path.join(process.cwd(), 'dist/_headers'), 'utf8');
   assert.match(headers, /Content-Security-Policy:.*frame-ancestors 'none'/);
@@ -70,6 +85,66 @@ test('static pages declare security headers for Cloudflare Pages', async () => {
   const response = await fetch(`${baseUrl}/privacy/`);
   assert.equal(response.headers.get('x-frame-options'), 'DENY');
   assert.match(response.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+});
+
+test('home page includes team, project context, FAQ and accurate prototype scope', async () => {
+  const html = await (await fetch(`${baseUrl}/`)).text();
+  for (const text of ['Théo Dubois', 'Zakaria Chaikhi', 'Antonin Chaikhi', 'Building on Solana', 'Colosseum hackathon project', 'For network operators', 'What does Pathnod actually check?', 'WHAT THIS DOES NOT CLAIM']) {
+    assert.ok(html.includes(text), text);
+  }
+  assert.match(html, /href="https:\/\/x\.com\/pathnod"/);
+  assert.match(html, /href="https:\/\/colosseum\.com\/arena\/projects\/sovel"/);
+  assert.equal((html.match(/class="faq-item"/g) || []).length, 6);
+  assert.equal((html.match(/class="team-card"/g) || []).length, 3);
+  assert.doesNotMatch(html, /CORROBORATE|Operate a DePIN network|◎|✳/);
+  for (const name of ['theo', 'zak', 'antonin']) {
+    const response = await fetch(`${baseUrl}/assets/team-${name}.jpg`, { method: 'HEAD' });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-type'), 'image/jpeg');
+  }
+});
+
+test('hardware demo is self-hosted, labelled and does not autoplay', async () => {
+  const html = await (await fetch(`${baseUrl}/`)).text();
+  const videos = [...html.matchAll(/<video\b[^>]*>[\s\S]*?<\/video>/g)].map(match => match[0]);
+  assert.equal(videos.length, 2);
+  for (const video of videos) {
+    assert.match(video, /controls/);
+    assert.match(video, /preload="none"/);
+    assert.doesNotMatch(video, /autoplay/i);
+    const caption = video.match(/aria-describedby="([^"]+)"/)?.[1];
+    assert.ok(caption && html.includes(`id="${caption}"`));
+  }
+  assert.match(html, /not an end-to-end Solana demonstration/);
+  assert.match(html, /src="\/assets\/iphone-esp32-demo-v2\.mp4"/);
+  assert.match(html, /class="hardware-demo-stage"/);
+  assert.match(html, /aria-label="What the demonstration shows"/);
+  for (const label of ['Bluetooth discovery', 'Signed challenge', 'Signature verified']) {
+    assert.ok(html.includes(label), label);
+  }
+  const response = await fetch(`${baseUrl}/assets/iphone-esp32-demo-v2.mp4`, { method: 'HEAD' });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-type'), 'video/mp4');
+  const poster = await fetch(`${baseUrl}/assets/iphone-esp32-demo-v2-poster.jpg`, { method: 'HEAD' });
+  assert.equal(poster.status, 200);
+});
+
+test('hardware MP4 uses browser-compatible H.264 High and fast-start metadata', async () => {
+  const data = await readFile(path.join(process.cwd(), 'dist/assets/iphone-esp32-demo-v2.mp4'));
+  const avcConfig = data.indexOf(Buffer.from('avcC'));
+  const moov = data.indexOf(Buffer.from('moov'));
+  const mdat = data.indexOf(Buffer.from('mdat'));
+  assert.ok(avcConfig > 0);
+  assert.equal(data[avcConfig + 4], 1, 'AVC configuration version');
+  assert.equal(data[avcConfig + 5], 100, 'H.264 High, not unsupported High 10');
+  assert.ok(moov > 0 && mdat > moov, 'metadata must precede video for progressive playback');
+});
+
+test('beta explains iOS scope without excluding other waitlist users', async () => {
+  const html = await (await fetch(`${baseUrl}/beta/`)).text();
+  assert.match(html, /Android support has no announced date/);
+  assert.match(html, /name="iphone" value="no"/);
+  assert.match(html, /No rewards are promised/);
 });
 
 test('home page embeds the self-hosted concept video without autoplay', async () => {

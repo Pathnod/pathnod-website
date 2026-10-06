@@ -10,7 +10,7 @@ export function SiteHeader({ page }: { page: Page }) {
       <div className="shell header-inner">
         <a className="brand" href="/" aria-label="Pathnod home">
           <span className="brand-mark" aria-hidden="true" />
-          <span>Pathnod</span>
+          <span>pathnod</span>
         </a>
         <button
           className="menu-toggle"

@@ -110,6 +110,7 @@ reverse proxy that sanitizes `X-Forwarded-For`.
 
 - Team biographies are adapted from the [Pathnod Colosseum profile](https://colosseum.com/arena/projects/sovel), as supplied by the team. LinkedIn profile links and locally hosted portraits were supplied/requested by the team (retrieved 5 October 2026).
 - `public/assets/iphone-esp32-demo-v2.mp4` is a web-optimized, silent copy of the team's real hardware recording. It shows the iPhone app reporting three verified signatures, not an end-to-end Solana flow. The original recording is preserved outside this repository.
+- Header and footer use `pathnod-mark-v2.png`, the new transparent Pathnod logo; the favicon uses `pathnod-favicon-v2.png`. Decorative step symbols are inline SVGs, not platform-dependent emoji.
 - Keep prototype limitations, iOS scope, battery measurements and rewards wording accurate as development progresses. Do not copy future reward promises from project pitches into beta terms.
 - Legal/privacy publication identity remains incomplete. Team membership does not determine who is legally responsible; obtain the team's chosen responsible person and publication details before completing those notices.
 

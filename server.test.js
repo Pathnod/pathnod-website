@@ -62,6 +62,21 @@ test('serves pre-rendered pages with their route-specific content', async () => 
   }
 });
 
+test('new branding assets and favicon are available on every page', async () => {
+  for (const route of ['/', '/beta/', '/operators/', '/privacy/', '/legal/']) {
+    const html = await (await fetch(`${baseUrl}${route}`)).text();
+    assert.match(html, /rel="icon" href="\/assets\/pathnod-favicon-v2\.png"/);
+    assert.match(html, /rel="apple-touch-icon" href="\/assets\/pathnod-favicon-v2\.png"/);
+    assert.doesNotMatch(html, /class="footer-banner"|class="footer-identity"/);
+    assert.match(html, /Trust what is on the ground\./);
+  }
+  for (const asset of ['pathnod-favicon-v2.png', 'pathnod-mark-v2.png']) {
+    const response = await fetch(`${baseUrl}/assets/${asset}`, { method: 'HEAD' });
+    assert.equal(response.status, 200, asset);
+    assert.equal(response.headers.get('content-type'), 'image/png');
+  }
+});
+
 test('static pages declare security headers for Cloudflare Pages', async () => {
   const headers = await readFile(path.join(process.cwd(), 'dist/_headers'), 'utf8');
   assert.match(headers, /Content-Security-Policy:.*frame-ancestors 'none'/);

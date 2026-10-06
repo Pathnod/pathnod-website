@@ -89,6 +89,37 @@ test('home page includes team, project context, FAQ and accurate prototype scope
   }
 });
 
+test('hardware demo is self-hosted, labelled and does not autoplay', async () => {
+  const html = await (await fetch(`${baseUrl}/`)).text();
+  const videos = [...html.matchAll(/<video\b[^>]*>[\s\S]*?<\/video>/g)].map(match => match[0]);
+  assert.equal(videos.length, 2);
+  for (const video of videos) {
+    assert.match(video, /controls/);
+    assert.match(video, /preload="none"/);
+    assert.doesNotMatch(video, /autoplay/i);
+    const caption = video.match(/aria-describedby="([^"]+)"/)?.[1];
+    assert.ok(caption && html.includes(`id="${caption}"`));
+  }
+  assert.match(html, /not an end-to-end Solana demonstration/);
+  assert.match(html, /src="\/assets\/iphone-esp32-demo-v2\.mp4"/);
+  const response = await fetch(`${baseUrl}/assets/iphone-esp32-demo-v2.mp4`, { method: 'HEAD' });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-type'), 'video/mp4');
+  const poster = await fetch(`${baseUrl}/assets/iphone-esp32-demo-v2-poster.jpg`, { method: 'HEAD' });
+  assert.equal(poster.status, 200);
+});
+
+test('hardware MP4 uses browser-compatible H.264 High and fast-start metadata', async () => {
+  const data = await readFile(path.join(process.cwd(), 'dist/assets/iphone-esp32-demo-v2.mp4'));
+  const avcConfig = data.indexOf(Buffer.from('avcC'));
+  const moov = data.indexOf(Buffer.from('moov'));
+  const mdat = data.indexOf(Buffer.from('mdat'));
+  assert.ok(avcConfig > 0);
+  assert.equal(data[avcConfig + 4], 1, 'AVC configuration version');
+  assert.equal(data[avcConfig + 5], 100, 'H.264 High, not unsupported High 10');
+  assert.ok(moov > 0 && mdat > moov, 'metadata must precede video for progressive playback');
+});
+
 test('beta explains iOS scope without excluding other waitlist users', async () => {
   const html = await (await fetch(`${baseUrl}/beta/`)).text();
   assert.match(html, /Android support has no announced date/);

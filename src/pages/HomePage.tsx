@@ -79,7 +79,14 @@ export function HomePage() {
 
       <section className="section shell status-section">
         <div className="section-label">Where we are</div>
-        <div className="section-body status-body" data-scroll-reveal><h2>Building the first<br /><em>real-world test.</em></h2><p>Pathnod is in an early validation stage. We are prototyping the device–phone exchange and speaking with physical network operators. The broader privacy and on-chain architecture is a direction under development, not a deployed guarantee.</p><a className="inline-link" href="https://github.com/Pathnod" target="_blank" rel="noopener noreferrer">Follow the work on GitHub <span aria-hidden="true">↗</span></a></div>
+        <div className="section-body status-body" data-scroll-reveal><h2>From concept to<br /><em>real hardware.</em></h2><p>Our first device–phone prototype runs on an ESP32 and an iPhone: the phone discovers the device over Bluetooth and verifies signed challenge responses. We are expanding hardware testing. The broader privacy and on-chain architecture remains under development, not a deployed production guarantee.</p><a className="inline-link" href="https://github.com/Pathnod/pathnod" target="_blank" rel="noopener noreferrer">Follow the work on GitHub <span aria-hidden="true">↗</span></a></div>
+      </section>
+
+      <section id="field-notes" className="section shell field-notes-section" aria-labelledby="field-notes-heading">
+        <div className="section-label">Field note / 001</div>
+        <div className="section-body" data-scroll-reveal><h2 id="field-notes-heading">An iPhone meets<br /><em>an ESP32.</em></h2><p className="section-intro">Hardware test · 5 October 2026. The app reports three signatures verified on this iPhone. This is a local challenge–response test, not an end-to-end Solana demonstration or a GPS-location proof.</p>
+          <figure className="hardware-demo"><video controls playsInline preload="none" width="1080" height="1920" poster="/assets/iphone-esp32-demo-v2-poster.jpg" aria-describedby="hardware-demo-caption"><source src="/assets/iphone-esp32-demo-v2.mp4" type="video/mp4" /><a href="/assets/iphone-esp32-demo-v2.mp4">Download the hardware demonstration</a></video><figcaption id="hardware-demo-caption">A real phone and development device, not a simulation. Silent demonstration; the app displays “Three signatures verified on this iPhone.” Battery impact and broader field conditions still need measurement.</figcaption></figure>
+        </div>
       </section>
 
       <ProjectDetails />

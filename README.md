@@ -106,6 +106,12 @@ reverse proxy that sanitizes `X-Forwarded-For`.
 
 ## Project structure
 
+### Public content and media
+
+- Team biographies are adapted from the [Pathnod Colosseum profile](https://colosseum.com/arena/projects/sovel), as supplied by the team. LinkedIn profile links and locally hosted portraits were supplied/requested by the team (retrieved 5 October 2026).
+- Keep prototype limitations, iOS scope, battery measurements and rewards wording accurate as development progresses. Do not copy future reward promises from project pitches into beta terms.
+- Legal/privacy publication identity remains incomplete. Team membership does not determine who is legally responsible; obtain the team's chosen responsible person and publication details before completing those notices.
+
 ```text
 src/app/         app shell and route selection
 src/components/  shared UI and form behavior

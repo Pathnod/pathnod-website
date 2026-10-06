@@ -72,6 +72,30 @@ test('static pages declare security headers for Cloudflare Pages', async () => {
   assert.match(response.headers.get('content-security-policy'), /frame-ancestors 'none'/);
 });
 
+test('home page includes team, project context, FAQ and accurate prototype scope', async () => {
+  const html = await (await fetch(`${baseUrl}/`)).text();
+  for (const text of ['Théo Dubois', 'Zakaria Chaikhi', 'Antonin Chaikhi', 'Building on Solana', 'Colosseum hackathon project', 'For network operators', 'What does Pathnod actually check?', 'WHAT THIS DOES NOT CLAIM']) {
+    assert.ok(html.includes(text), text);
+  }
+  assert.match(html, /href="https:\/\/x\.com\/pathnod"/);
+  assert.match(html, /href="https:\/\/colosseum\.com\/arena\/projects\/sovel"/);
+  assert.equal((html.match(/class="faq-item"/g) || []).length, 6);
+  assert.equal((html.match(/class="team-card"/g) || []).length, 3);
+  assert.doesNotMatch(html, /CORROBORATE|Operate a DePIN network|◎|✳/);
+  for (const name of ['theo', 'zak', 'antonin']) {
+    const response = await fetch(`${baseUrl}/assets/team-${name}.jpg`, { method: 'HEAD' });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-type'), 'image/jpeg');
+  }
+});
+
+test('beta explains iOS scope without excluding other waitlist users', async () => {
+  const html = await (await fetch(`${baseUrl}/beta/`)).text();
+  assert.match(html, /Android support has no announced date/);
+  assert.match(html, /name="iphone" value="no"/);
+  assert.match(html, /No rewards are promised/);
+});
+
 test('home page embeds the self-hosted concept video without autoplay', async () => {
   const html = await (await fetch(`${baseUrl}/`)).text();
   const video = html.match(/<video\b[^>]*>[\s\S]*?<\/video>/)?.[0];

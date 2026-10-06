@@ -12,6 +12,8 @@ export function SiteFooter() {
           <a href="/privacy/">Privacy</a>
           <a href="/legal/">Legal notice</a>
           <a href="https://github.com/Pathnod" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+          <a href="https://x.com/pathnod" target="_blank" rel="noopener noreferrer">X ↗</a>
+          <a href="https://colosseum.com/arena/projects/sovel" target="_blank" rel="noopener noreferrer">Colosseum ↗</a>
         </div>
         <span className="footer-meta">© 2026 Pathnod · Early-stage project</span>
       </div>

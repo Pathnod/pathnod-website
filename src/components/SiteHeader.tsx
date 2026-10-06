@@ -25,6 +25,8 @@ export function SiteHeader({ page }: { page: Page }) {
           <a href={page === 'home' ? '#problem' : '/#problem'} onClick={closeMenu}>The problem</a>
           <a href={page === 'home' ? '#approach' : '/#approach'} onClick={closeMenu}>Our approach</a>
           <a href="/operators/" aria-current={page === 'operators' ? 'page' : undefined} onClick={closeMenu}>For operators</a>
+          <a href={page === 'home' ? '#team' : '/#team'} onClick={closeMenu}>Team</a>
+          <a href="https://x.com/pathnod" target="_blank" rel="noopener noreferrer" onClick={closeMenu}>X ↗</a>
           <a className="nav-cta" href="/beta/" aria-current={page === 'beta' ? 'page' : undefined} onClick={closeMenu}>
             Join the beta <span aria-hidden="true">↗</span>
           </a>

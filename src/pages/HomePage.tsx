@@ -85,7 +85,18 @@ export function HomePage() {
       <section id="field-notes" className="section shell field-notes-section" aria-labelledby="field-notes-heading">
         <div className="section-label">Field note / 001</div>
         <div className="section-body" data-scroll-reveal><h2 id="field-notes-heading">An iPhone meets<br /><em>an ESP32.</em></h2><p className="section-intro">Hardware test · 5 October 2026. The app reports three signatures verified on this iPhone. This is a local challenge–response test, not an end-to-end Solana demonstration or a GPS-location proof.</p>
-          <figure className="hardware-demo"><video controls playsInline preload="none" width="1080" height="1920" poster="/assets/iphone-esp32-demo-v2-poster.jpg" aria-describedby="hardware-demo-caption"><source src="/assets/iphone-esp32-demo-v2.mp4" type="video/mp4" /><a href="/assets/iphone-esp32-demo-v2.mp4">Download the hardware demonstration</a></video><figcaption id="hardware-demo-caption">A real phone and development device, not a simulation. Silent demonstration; the app displays “Three signatures verified on this iPhone.” Battery impact and broader field conditions still need measurement.</figcaption></figure>
+          <figure className="hardware-demo">
+            <div className="hardware-demo-stage">
+              <div className="hardware-demo-intro"><span className="card-kicker">REAL HARDWARE / 001</span><span className="hardware-demo-title">A nearby device.<br /><em>A signed answer.</em></span><p>iPhone × ESP32<br />Local Bluetooth exchange</p></div>
+              <video controls playsInline preload="none" width="1080" height="1920" poster="/assets/iphone-esp32-demo-v2-poster.jpg" aria-label="iPhone and ESP32 hardware demonstration" aria-describedby="hardware-demo-caption"><source src="/assets/iphone-esp32-demo-v2.mp4" type="video/mp4" /><a href="/assets/iphone-esp32-demo-v2.mp4">Download the hardware demonstration</a></video>
+              <ol className="hardware-demo-steps" aria-label="What the demonstration shows">
+                <li><span className="step-index">01 / FIND</span><strong>Bluetooth discovery</strong><p>The phone finds the nearby device.</p></li>
+                <li><span className="step-index">02 / ASK</span><strong>Signed challenge</strong><p>The device signs its response to a fresh challenge.</p></li>
+                <li><span className="step-index">03 / CHECK</span><strong>Signature verified</strong><p>The iPhone checks the device’s signed answer.</p></li>
+              </ol>
+            </div>
+            <figcaption id="hardware-demo-caption">A real phone and development device, not a simulation. Silent demonstration; the app displays “Three signatures verified on this iPhone.” Battery impact and broader field conditions still need measurement.</figcaption>
+          </figure>
         </div>
       </section>
 

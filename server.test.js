@@ -117,6 +117,11 @@ test('hardware demo is self-hosted, labelled and does not autoplay', async () =>
   }
   assert.match(html, /not an end-to-end Solana demonstration/);
   assert.match(html, /src="\/assets\/iphone-esp32-demo-v2\.mp4"/);
+  assert.match(html, /class="hardware-demo-stage"/);
+  assert.match(html, /aria-label="What the demonstration shows"/);
+  for (const label of ['Bluetooth discovery', 'Signed challenge', 'Signature verified']) {
+    assert.ok(html.includes(label), label);
+  }
   const response = await fetch(`${baseUrl}/assets/iphone-esp32-demo-v2.mp4`, { method: 'HEAD' });
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('content-type'), 'video/mp4');
